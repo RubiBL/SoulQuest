@@ -1,0 +1,42 @@
+{%extends "Base.html" %}
+{%block title%}Log in{% endblock %}
+{%block content %}
+<div class="hero_area">
+  <!-- Inicio de la sección del encabezado -->
+  <header class="header_section">
+    <div class="container-fluid">
+      <nav class="navbar navbar-expand-lg custom_nav-container ">
+        <a class="navbar-brand" href="/">
+          <span>SoulQuest</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav">    
+          </ul>            
+        </div>
+      </nav>      
+    </div>
+  </header>
+  <!-- Fin de la sección del encabezado -->
+</div>
+<div class="container  ">
+<h1>Bienvenido a SoulQuest</h1>
+    <h2>Inicia sesión</h2>
+    <section class="slider_section ">    
+			<form method="post">
+			<div class="container "> 
+    				<label for="username">Username</label>
+    				<input name="username" id="username" required>    				
+                            <div class="container ">                                       
+                                  <div class="detail-box">
+                                    <div class="btn-box">
+                                      <input  class="btn1" type="submit" value="Log in">                                     
+                                    </div>
+                                  </div>                                
+            </div>                      			
+  			</form> 
+     </section>
+</div>		 			
+{% endblock %}
