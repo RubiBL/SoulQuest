@@ -1,0 +1,100 @@
+﻿{%extends "Base.html" %}
+{%block title%}Lessons{% endblock %}
+{%block content %}
+<div class="hero_area">
+  <header class="header_section">
+    <div class="container-fluid">
+      <nav class="navbar navbar-expand-lg custom_nav-container ">
+        <a class="navbar-brand" href="/">
+          <span>SoulQuest</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item active">
+              <a class="nav-link" href="/Lessons">Lessons</a>
+            </li>
+            {% if "user" in session %}
+            <li class="nav-item">
+              <a class="nav-link" href="/Logoff">Log off</a>
+            </li>
+            {% endif %}
+          </ul>            
+        </div>
+      </nav>
+    </div>
+  </header>
+</div>
+{% if x==1 %}
+<section class="slider_section ">    
+			<form method="post">
+			<div class="container "> 
+    				<label for="Texto">Que quieres aprender hoy?</label>
+    				<input name="texto" id="texto" required>    				
+                            <div class="container ">                                       
+                                  <div class="detail-box">
+                                    <div class="btn-box">
+                                      <input  class="btn1" type="submit" value="continuar">                                     
+                                    </div>
+                                  </div>                                
+            </div>                      			
+  			</form> 
+     </section>
+{%endif%}
+{% if x==2 %}
+<section class="about_section layout_padding layout_margin">
+      <div class="container  ">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="detail-box">
+              <div class="heading_container">
+              </div>              
+               <p>Pregunta {{a}} {{texto}} </p>                           
+            </div>
+          </div>      
+        </div>
+		<form method="post">
+		<div class="container ">                                       
+                                  <div class="detail-box">
+                                    <div class="btn-box">
+                                      <input  class="btn1" type="submit" value="{{dato[a]}}">                                     
+                                    </div>
+                                  </div>                                
+            </div>   
+		</form>    
+<form method="post">
+		<div class="container ">                                       
+                                  <div class="detail-box">
+                                    <div class="btn-box">
+                                      <input  class="btn1" type="submit" value="{{dato[a+1]}}">                                     
+                                    </div>
+                                  </div>                                
+            </div>   
+		</form>
+<form method="post">
+		<div class="container ">                                       
+                                  <div class="detail-box">
+                                    <div class="btn-box">
+                                      <input  class="btn1" type="submit" value="{{dato[a+2]}}">                                     
+                                    </div>
+                                  </div>                                
+            </div>   
+		</form>
+<form method="post">
+		<div class="container ">                                       
+                                  <div class="detail-box">
+                                    <div class="btn-box">
+                                      <input  class="btn1" type="submit" value="{{dato[a+3]}}">                                     
+                                    </div>
+                                  </div>                                
+            </div>   
+		</form>       
+      </div>
+    </section>
+{%endif%}
+{% endblock %} 	
