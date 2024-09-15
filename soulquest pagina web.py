@@ -3,7 +3,7 @@ from datetime import timedelta
 import openai
 import re
 from flask_sqlalchemy import SQLAlchemy
-
+from sqlalchemy import Column, Integer, String, Text
 # Configura tu clave de API de OpenAI
 openai.api_key = ''
 
@@ -29,11 +29,12 @@ class Usuario(db.Model):
         return f'<Usuario {self.username}>'
 
 class Tema(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100), unique=True, nullable=False)
-    preguntas = db.Column(db.Text, nullable=False)  # Almacena las preguntas como texto
-    respuestas_correctas = db.Column(db.Text, nullable=False)  # Almacena las respuestas correctas
-    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String(100), nullable=False)
+    preguntas = Column(Text, nullable=False)
+    reactivos = Column(Text, nullable=True)  # Permitir valores nulos
+    respuestas_correctas = Column(Text, nullable=True)  # Permitir valores nulos
+    usuario_id = Column(Integer, db.ForeignKey('usuario.id'), nullable=False)
 
     def __repr__(self):
         return f'<Tema {self.nombre}>'
@@ -67,7 +68,7 @@ def Login():
             session["user_id"] = usuario.id  # Guarda el ID del usuario en la sesión    
             return redirect(url_for("home"))
         else:
-            flash("Usuario o contraseña incorrectos. Inténtalo de nuevo.")
+            flash("Incorrect username or password. Please try again.")
             return redirect(url_for("Login"))
     else:
         if "user" in session:
@@ -87,11 +88,11 @@ def Signup():
         existing_email = Usuario.query.filter_by(email=email).first()
         
         if existing_user:
-            flash("El nombre de usuario ya existe. Por favor, elige otro.")
+            flash("The username already exists. Please choose another one.")
             return redirect(url_for("Signup"))
         
         if existing_email:
-            flash("El correo electrónico ya está registrado. Por favor, usa otro.")
+            flash("The email is already registered. Please use another one.")
             return redirect(url_for("Signup"))
 
         # Crear un nuevo usuario
@@ -109,12 +110,14 @@ def Signup():
             return redirect(url_for("home"))
         return render_template("Signup.html")
 
+
 @app.route("/Lessons", methods=["POST", "GET"])
 def Lessons():
     if "user" in session:
         user = session["user"]
         user_id = session["user_id"]
-
+        session["Resultados"]=0
+        temas = Tema.query.filter_by(usuario_id=user_id).all()  # Obtener los temas del usuario actual
         if request.method == "POST":
             nombre_tema = request.form["texto"]
 
@@ -127,41 +130,44 @@ def Lessons():
                 if usuario.some_integer < 10:
                     return redirect(url_for("workplace"))
                 else:
-                    # Generar nuevas preguntas y combinarlas con las preguntas existentes
-                    nuevas_preguntas, nuevos_reactivos, nuevas_respuestas = chat(nombre_tema, 10)
+                    # Generar nuevas preguntas
+                    nuevas_preguntas = chat(nombre_tema, 10)
 
-                    # Combinar las preguntas y respuestas existentes con las nuevas
+                    # Combinar las preguntas existentes con las nuevas
                     preguntas_existentes = tema_existente.preguntas.split("; ")
-                    respuestas_existencias = tema_existente.respuestas_correctas.split("; ")
                     todas_preguntas = preguntas_existentes + nuevas_preguntas
-                    todas_respuestas = respuestas_existencias + nuevas_respuestas
 
-                    # Actualizar el tema con las nuevas preguntas y respuestas
+                    # Actualizar el tema con las nuevas preguntas
                     tema_existente.preguntas = "; ".join(todas_preguntas)
-                    tema_existente.respuestas_correctas = "; ".join(todas_respuestas)
                     db.session.commit()
 
                     # Redirigir a la página de trabajo
                     return redirect(url_for("workplace"))
             else:
                 # Crear un nuevo tema si no existe
-                nuevas_preguntas, nuevos_reactivos, nuevas_respuestas = chat(nombre_tema, 10)
-                nuevo_tema = Tema(nombre=nombre_tema, preguntas="; ".join(nuevas_preguntas),
-                                  respuestas_correctas="; ".join(nuevas_respuestas), usuario_id=user_id)
+                nuevas_preguntas, reactivos_lista, respuestas_correctas = chat(nombre_tema, 10)
+                nuevo_tema = Tema(nombre=nombre_tema, preguntas="; ".join(nuevas_preguntas), usuario_id=user_id)
                 db.session.add(nuevo_tema)
                 db.session.commit()
+
+                # Guardar la lista de reactivos en la sesión
+                session['reactivos'] = reactivos_lista  # Aquí puedes inicializar con la lista vacía si es necesario
+                session["respuestas"]= respuestas_correctas
                 return redirect(url_for("workplace"))
 
-        return render_template("lessons.html", usr=user, x=1)
+        return render_template("lessons.html", usr=user, x=1, temas=temas)
     else:
         return redirect(url_for("Login"))
+
+
+
+
 
 @app.route("/Logoff", methods=["POST", "GET"])
 def Logoff():
     session.pop("user", None)
     session.pop("user_id", None)  # Elimina el ID del usuario de la sesión    
     return redirect(url_for("home"))
-
 @app.route("/workplace", methods=["POST", "GET"])
 def workplace():
     if "user" in session:
@@ -172,22 +178,67 @@ def workplace():
         usuario = Usuario.query.filter_by(id=user_id).first()
 
         if request.method == "POST":
+            # Check which button was pressed
+            if "Dato" in request.form:
+                if request.form["Dato"] == "Start new topic":
+                    # Reset the integer and redirect to lessons with x=1
+                    usuario.some_integer = 0
+                    db.session.commit()
+                    return redirect(url_for("Lessons"))
+
+                elif request.form["Dato"] == "Continue Learning":
+                    # Generate 10 new questions
+                    nombre_tema = session["nombre_tema"]
+                    nuevas_preguntas, nuevos_reactivos, nuevas_respuestas = chat(nombre_tema, 10)
+
+                    # Store new questions, reactives, and correct answers in session
+                    session["texto"] = nuevas_preguntas
+                    session["reactivos"] = nuevos_reactivos
+                    session["respuestas"] = nuevas_respuestas
+
+                    return redirect(url_for("workplace"))
+
+            # Increment the question counter
             usuario.some_integer += 1
             db.session.commit()
 
-            texto = session.get("texto", [])
-            lista = session.get("lista", [])
-            respuesta = session.get("respuesta", [])
+            # Get the selected option and check against the correct answer
+            dato = request.form["Dato"]
+            respuestas_correctas = session["respuestas"]
+            opcion_seleccionada = dato[3:].strip()  # Remove first 3 chars
+            respuesta_correcta = respuestas_correctas[0][3:].strip()
 
-            return render_template("lessons.html", usr=user, x=2, texto=texto[usuario.some_integer], dato=lista, a=usuario.some_integer)
-        else:
-            texto = session.get("texto", [])
-            lista = session.get("lista", [])
-            respuesta = session.get("respuesta", [])
+            # Increment result if correct
+            if opcion_seleccionada == respuesta_correcta:
+                session["Resultados"] += 1
 
-            return render_template("lessons.html", usr=user, x=2, texto=texto[usuario.some_integer], dato=lista, a=usuario.some_integer)
+            # If user has answered 10 questions, call chat for feedback
+            if usuario.some_integer >= 10:
+                correct_answers = session["Resultados"]
+                flash(f"You answered {correct_answers} out of 10 questions correctly.")
+
+                # Call chat to provide feedback or study material
+                feedback_prompt = f"The user answered {correct_answers} out of 10 questions correctly on the topic {session['nombre_tema']}. Provide study material or references based on their performance."
+                _, _, feedback_responses = chat(feedback_prompt, 1)
+
+                # Flash the study material or feedback as a message
+                flash(feedback_responses[0])
+
+                # Redirect to the feedback page (x=3)
+                return render_template("lessons.html", usr=user, x=3)
+
+            # Get the list of reactives for the next question
+            reactivos_lista = session['reactivos']
+            preguntas = session["texto"]
+
+            # Continue the lesson (x=2)
+            return render_template("lessons.html", usr=user, x=2, texto=preguntas[usuario.some_integer], dato=reactivos_lista, a=usuario.some_integer)
+    
     else:
         return redirect(url_for("Login"))
+
+
+
 
 @app.route("/show_users", methods=["GET"])
 def show_users():
@@ -209,35 +260,34 @@ def show_users():
     user_data += "</ul>"
     return user_data
 
-
 def chat(texto, numero_preguntas=10):
     preguntas = []
     reactivos_lista = []
     respuestas_correctas = []
     for i in range(1, numero_preguntas + 1):
         prompt_text = f"""
-        El usuario quiere aprender sobre este tema: {texto}
-
-        Deberás darme una pregunta sobre ese tema siguiendo estas instrucciones:
-        1. Harás preguntas sobre conceptos básicos de ejercicios y deportes, una por una.
-        2. Para cada pregunta, proporcionarás un listado de 4 reactivos (opciones de respuesta) etiquetados como A, B, C, y D. Entre estas opciones, una debe ser la respuesta correcta.
-        3. Las opciones de respuesta (reactivos) deben ser listadas bajo el título "Reactivos".
-        4. El reactivo correcto debe ser listado por separado bajo el título "Respuesta correcta".
-        5. Si el usuario comete más de 5 errores, proporcionarás una explicación del tema y sugerencias para mejorar el aprendizaje del tema.
-        6. Cada pregunta debe ser numerada secuencialmente.
-        7. No repitas preguntas.
-
-        **Pregunta {i}:**
+        The user wants to learn about this topic: {texto}
+    Please provide a question about that topic following these instructions:
+        1. You will ask questions about basic concepts of exercises and sports, one at a time.
+        2. For each question, provide a list of 4 options labeled A, B, C, and D. Among these options, one must be the correct answer.
+        3. The answer options must be listed under the title "Options".
+        4. The correct answer must be listed separately under the title "Correct Answer".
+        5. If the user makes more than 5 mistakes, you will provide an explanation of the topic and suggestions to improve the user's learning.
+        6. Each question must be numbered sequentially.
+        7. Do not repeat questions.
+    **Question {i}:**
         """
-
-        response = openai.Completion.create(
-            engine="gpt-4o-mini",  # El motor de IA que deseas utilizar
-            prompt=prompt_text,
-            max_tokens=150
-        )
-
-        response_text = response.choices[0].text.strip()
+        response = openai.chat.completions.create(
+        model="gpt-4o-mini",  # El motor de IA que deseas utilizar
+        messages = [
+            {"role": "system", "content" : prompt_text},
+            ]
+       )
+        response_text = response.choices[0].message.content
+        response_text = response_text.replace("**", "")
         response_text = re.sub(r'Pregunta \d+:', '', response_text, flags=re.IGNORECASE)  # Remover 'Pregunta N:'
+        print("HOLA")
+        print(response_text)
         partes_texto = response_text.split("Reactivos:")
         if len(partes_texto) >= 2:
             # Parte de la pregunta
@@ -252,6 +302,8 @@ def chat(texto, numero_preguntas=10):
                 reactivos = [reactivo.strip() for reactivo in reactivos if reactivo.strip()]
                 reactivos_lista.extend(reactivos)
                 respuestas_correctas.append(respuesta_correcta.strip())
+                print(reactivos_lista)
+                print(respuestas_correctas)
     return preguntas, reactivos_lista, respuestas_correctas
 
 if __name__ == "__main__":

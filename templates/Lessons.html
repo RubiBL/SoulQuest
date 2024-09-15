@@ -31,17 +31,34 @@
   </header>
 </div>
 {% if x==1 %}
-<section class="slider_section ">    
+<section class="about_section layout_padding layout_margin ">    
 			<form method="post">
 			<div class="container "> 
-    				<label for="Texto">Que quieres aprender hoy?</label>
-    				<input name="texto" id="texto" required>    				
+    				<label for="Texto">What do you want to learn today?</label>
+    				<input name="texto" id="texto" required>
+    				<section class="slider_section ">   				
                             <div class="container ">                                       
                                   <div class="detail-box">
                                     <div class="btn-box">
                                       <input  class="btn1" type="submit" value="continuar">                                     
                                     </div>
-                                  </div>                                
+                                  </div> <br>
+                                                                 
+                            </div>
+                    </section>
+                 <label for="Texto">Select a topic you have worked on:</label>
+                 {% for tema in temas %}
+           <section class="slider_section ">   				
+                   <div class="container ">                                       
+                         <div class="detail-box">
+                           <div class="btn-box">
+                             <input  class="btn1" type="submit" value="{{ tema.nombre }}">                                     
+                           </div>
+                         </div> <br>
+                                                        
+                   </div>
+           </section>
+            {% endfor %}               
             </div>                      			
   			</form> 
      </section>
@@ -54,17 +71,16 @@
             <div class="detail-box">
               <div class="heading_container">
               </div>              
-               <p>Pregunta {{a+1}} {{texto}} </p>                           
+               <p>Question {{a+1}}: {{texto}} </p>                           
             </div>
           </div>      
         </div>
+<section class="slider_section ">   
 		<form method="post">
-		<div class="container  ">
-        <div class="row">
 		<div class="container ">                                       
                                   <div class="detail-box">
                                     <div class="btn-box">
-                                      <input  class="btn1" type="submit" value="{{dato[a]}}">                                     
+                                      <input  class="btn1" type="submit" name="Dato" value="{{dato[a]}}">                                     
                                     </div>
                                   </div>                                
             </div>   
@@ -73,7 +89,7 @@
 		<div class="container ">                                       
                                   <div class="detail-box">
                                     <div class="btn-box">
-                                      <input  class="btn1" type="submit" value="{{dato[a+1]}}">                                     
+                                      <input  class="btn1" type="submit" name="Dato" value="{{dato[a+1]}}">                                     
                                     </div>
                                   </div>                                
             </div>   
@@ -82,7 +98,7 @@
 		<div class="container ">                                       
                                   <div class="detail-box">
                                     <div class="btn-box">
-                                      <input  class="btn1" type="submit" value="{{dato[a+2]}}">                                     
+                                      <input  class="btn1" type="submit" name="Dato" value="{{dato[a+2]}}">                                     
                                     </div>
                                   </div>                                
             </div>   
@@ -94,11 +110,54 @@
                                       <input  class="btn1" type="submit" value="{{dato[a+3]}}">                                     
                                     </div>
                                   </div>                                
-            </div>
-        </div>
-        </div>       
+            </div>   
 		</form>       
+</section>		
       </div>
     </section>
 {%endif%}
+{% if x==3 %}
+<section class="about_section layout_padding layout_margin">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="detail-box">
+                    <div class="heading_container">
+                    </div>
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for msg in messages %}
+                                <p>{{ msg }}</p>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="slider_section">
+    <form method="post">
+        <div class="container">
+            <div class="detail-box">
+                <div class="btn-box">
+                    <input class="btn1" type="submit" name="Dato" value="Start new topic">
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <form method="post">
+        <div class="container">
+            <div class="detail-box">
+                <div class="btn-box">
+                    <input class="btn1" type="submit" name="Dato" value="Continue Learning">
+                </div>
+            </div>
+        </div>
+    </form>
+</section>
+{% endif %}
+
 {% endblock %} 	
