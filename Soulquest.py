@@ -9,9 +9,9 @@ import re
 import os
 import json
 # Configura tu clave de API
-openai.api_key = 'sk-proj-TVFfuaFUBlEVrcpLnRQVT3BlbkFJXs4vSSz0CP1NLl8DbzDe'
+openai.api_key = ''
 # Configuración del cliente OpenAI
-client = OpenAI(api_key='sk-proj-TVFfuaFUBlEVrcpLnRQVT3BlbkFJXs4vSSz0CP1NLl8DbzDe')
+client = OpenAI(api_key='')
 # Inicializa Pygame
 pygame.init()
 pygame.mixer.init()
